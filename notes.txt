@@ -51,4 +51,35 @@ Save our work, commit it to Github.
 
 git commit -m "Install bootstrap"
 
+###########
+14 
+INSTALL FONTAWESOME
+
+Step 1
+To add some more awesome styling power in our application, we are going to use Icons. 
+And one of the best assets out there is 'font-awesome'. 
+
+Check out the documentation for the bokmann/font-awesome-rails gem, and if you did, add it to the gemfile and run bundle. 
+https://github.com/bokmann/font-awesome-rails
+
+Step 2
+Open the gemfile, and add the gem to the bottom.
+
+bundle
+
+Step 3
+And the best part is, that we only have to add one line to the applications.css assets pipeline in order for the font-awesome to work! 
+./app/assets/stylesheets/application.css
+<<EOF
+ *
+ *= require_tree .
+ *= require font-awesome
+ *= require_self
+ */
+ 
+Step 4
+Save our work, and push it up to Github. 
+git commit -m "Added Font-Awesome"
+
+
 
