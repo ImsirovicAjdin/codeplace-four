@@ -106,6 +106,150 @@ And save our work, commit it to Github.
 
 git commit -m "Installed Simple Form"
 
+###########
+16
+GENERATING THE HOME PAGE
 
+Step 1
+Every application needs a landing page right?
+In my workflow I like to use a separate controller for all the static pages, like the home / contact / info kind of pages.  
+Open the terminal, and run rails generate controller Pages home .This will create the PagesController with the :home action in it, and even open up a route for it.
+
+rails g controller Pages home
+
+ you can substitute rails generate, with rails g
+
+Step 2
+Let's set this new page as the root of our application, so that we can have our landing page. 
+Open the routes.rb file, and substitute the     line   with: 
+root 'pages#home' 
+./app/config/routes.rb
+<<BOF
+Rails.application.routes.draw do
+    
+ # MAKE SURE TO REMOVE THE GET LINE
+  get 'pages/home'
+  root 'pages#home'        
+  
+  # The priority is based upon order of creation: first created -> highest priority.
+  # See how all your routes lay out with "rake routes".
+  ...
+  
+  
+  
+Step 3
+Go to your console, start a new rails server, and inspect your localhost:3000/
+rails s 
+
+Step 4
+And as usual, commit the work to Github.
+
+git commit -m "Add PageController and landing page"
+
+
+
+
+
+
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
+
+###########
+15
+INSTALL SIMPLE FORM
 
 
