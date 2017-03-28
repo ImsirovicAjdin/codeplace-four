@@ -5,7 +5,7 @@ gem install rails
 rails -v // 5.02
 
 2
-rails new estuk // estuk/ folder created, 
+rails new stukplaces // stukplaces/ folder created, 
     how to run rails 5 on c9.io?
 
 3
@@ -22,5 +22,33 @@ SAVE FIRST COMMIT:
 5
 ADD REMOTE REPOSITORY:
     In github, click new repository, give it a good name and description, then:
-    git remote add origin https://github.com/ImsirovicAjdin/codeplace-two.git
+    git remote add origin https://github.com/ImsirovicAjdin/codeplace-four.git
     git push -u origin master
+    
+####################
+
+13
+INSTALLING BOOTSTRAP
+
+Step 1
+We will be using our favourite Front-End framework of choice, bootstrap!
+
+Head over to the seyhunak/twitter-bootstrap-rails gem documentation on Github, and take a short look at the instructions. When you're done, we'll add the gem to our gemfile and run the bundle install command. 
+https://github.com/seyhunak/twitter-bootstrap-rails
+
+./gemfile.rb
+gem 'twitter-bootstrap-rails', :git => 'git://github.com/seyhunak/twitter-bootstrap-rails.git'
+
+ we could also just use 'bundle' to substitute 'bundle install'
+
+Step 2
+As noticed in the documentation, we need to run a generator for us to install bootstrap. We want to specify the use of static files for our app.
+
+rails g bootstrap:install static
+
+Step 3
+Save our work, commit it to Github.
+
+git commit -m "Install bootstrap"
+
+
