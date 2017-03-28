@@ -82,4 +82,30 @@ Save our work, and push it up to Github.
 git commit -m "Added Font-Awesome"
 
 
+###########
+15
+INSTALL SIMPLE FORM
+
+Step 1
+Great apps have great forms! Lucky for us, there is an awesome gem from the hero's of Plataformatec that have simplified our life and standardizing a lot of work for us. 
+Go to the plataformatec/simple_form documentation, and when you're done, add it to the bottom of the gemfile and run bundle. 
+https://github.com/plataformatec/simple_form
+
+./gemfile.rb
+gem 'simple_form'
+
+bundle
+
+Step 2
+We have read the documentation, so we know we have to run the simple_form generator, and specify the use of bootstrap.
+
+rails g simple_form:install --bootstrap
+
+Step 3
+And save our work, commit it to Github.
+
+git commit -m "Installed Simple Form"
+
+
+
 
