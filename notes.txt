@@ -227,8 +227,163 @@ git commit -m "Add the Header"
 
 
 ###########
-15
-INSTALL SIMPLE FORM
+18
+INSTALLING DEVISE
+
+Step 1
+The next step in making our application is adding Users. 
+For this, we'll be using the awesome gem from plataformatec/devise, so head over to the repo and read up on the documentation, and then continue by adding it to the gemfile and run bundle. 
+https://github.com/plataformatec/devise
+
+gem 'devise'
+
+bundle
+
+Step 2
+Devise requires us to run the devise generator for installation.
+
+rails g devise:install
+
+And since we will be updating the User and the user views, we'll generate the views to.
+
+rails g devise:views
+
+Step 3
+Now it's time to create the User model,
+
+rails g devise User
+
+Inspect the created migration, and then migrate it to the database.
+
+rake db:migrate
+
+Step 4
+We want our Users to have a :name field, unfortunately, devise didn't provide us with a User model that has the :name field. But, luckily, we can easily create this ourselves. 
+Let's create a migation to Add the Name to Users, the name field should be of the string type.
+
+rails g migration AddNameToUsers name:string
+
+And after inspecting the migration, we can migrate it to the database. 
+
+rake db:migrate
+
+Step 5
+The next thing we want to do is make sure the User will have a name when a user is created. We'll make a validation for that, in the User.rb model. 
+./app/models/user.rb
+        class User < ActiveRecord::Base
+          # Include default devise modules. Others available are:
+          # :confirmable, :lockable, :timeoutable and :omniauthable
+          devise :database_authenticatable, :registerable,
+                 :recoverable, :rememberable, :trackable, :validatable
+        
+           validates_presence_of :name      
+        end
+        
+Step 6
+Now that we have created the field for the User model, we have to update the UsersController. The way to do this with devise, is to create a new Controller for this. 
+Inside the app/controllers/ folder create a new controller called registrations_controller.rb. 
+You could use either your editor and right-click on the folder, select: 'new file',  or use the terminal command from inside the app directory: 'touch  app/controller/registrations_controller.rb' 
+
+touch ./app/controllers/registrations_controller.rb
+
+According to the documentation, this should be inheriting from the Devise::RegistrationsController. 
+
+./app/controllers/registrations_controller.rb
+
+        class RegistrationsController < Devise::RegistrationsController
+        
+        end
+
+According to the documentation, we need to create the sign_up and account_update params, in order for rails to pass through the save params. In these params we specify the permitted and required parameters for the user.
+The only difference between the two, is that the account_update_params also take a :current_password field, the rest is pretty much self explaining.  
+
+./app/controllers/registrations_controller.rb
+
+        class RegistrationsController < Devise::RegistrationsController
+        	
+        	def sign_up_params
+        		params.require(:user).permit(:name, :email, :password)
+        	end
+        
+        	def account_update_params
+        		params.require(:user).permit(:name, :email, :password, :current_password)
+        	end
+        
+        end
+
+Step 7
+Now we need to tell Devise to use this registrations controller, instead of the default. 
+Again, all this can be found in the documentation of Devise. 
+Open the routes.rb and specify devise to use the new controller. 
+
+./app/config/routes.rb
+<<BOF
+Rails.application.routes.draw do
+  devise_for :users, controllers: { registrations: 'registrations'}
+  root 'pages#home'
+  
+Step 8
+And with our new fields and controller set, we can update the views. 
+First we start with the app/views/devise/registrations/new.html.erb 
+We want to remove the password_confirmation field, and add the input field for :name. 
+Also we want that field to be autofocused instead of the :email field.
+./app/views/devise/registrations/new.html.erb
+<h2>Sign up</h2>
+
+<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :name, required: true, autofocus: true %>
+    <%= f.input :email, required: true %>
+
+    <%= f.input :password, required: true, hint: ("#{@minimum_password_length} characters minimum" if @minimum_password_length) %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit, "Sign up" %>
+  </div>
+<% end %>
+
+<%= render "devise/shared/links" %>
+
+Basically the same goes for the ../registrations/edit.html.erb view,
+Add the :name field, give it the autofocus. Remove the autofocus from the email field, and remove the password_confirmation field. 
+./app/views/devise/registrations/edit.html.erb
+<h2>Edit <%= resource_name.to_s.humanize %></h2>
+
+<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :name, required: true, autofocus: true %>
+    <%= f.input :email, required: true %>
+    
+    <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+      <p>Currently waiting confirmation for: <%= resource.unconfirmed_email %></p>
+    <% end %>
+
+    <%= f.input :password, autocomplete: "off", hint: "leave it blank if you don't want to change it", required: false %>
+
+    <%= f.input :current_password, hint: "we need your current password to confirm your changes", required: true %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit, "Update" %>
+  </div>
+<% end %>
+
+<h3>Cancel my account</h3>
+
+<p>Unhappy? <%= link_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?" }, method: :delete %></p>
+
+<%= link_to "Back", :back %>
+
+Step 9
+Before we continue and create our first user, let's save our work!
+Doing a lot of small commits is actually considered as good practice, so save the work and commit it to Github.
+
+git commit -m "Update user Registration and New views"
 
 ###########
 15
