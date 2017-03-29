@@ -386,95 +386,203 @@ Doing a lot of small commits is actually considered as good practice, so save th
 git commit -m "Update user Registration and New views"
 
 ###########
-15
-INSTALL SIMPLE FORM
+19
+ADDING FLASH MESSAGES
+Before we try out our sign_up and edit form, we should add 'flash messages'. These kind of notifications are important to signal the user if an event was successful or failed, and maybe provide some kind of hint in case of a failure. 
+
+Step 1
+Bootstrap comes with great flash messages right out of the box, and it even has a nice javascript function to close the flash message. 
+Let's use the standard Bootstrap flash-message and the by Rails provided Flash object.
+Since these messages can occur throughout the entire application we'll add them to the application.hml.erb view, since that's the master view page. 
+We'll use the bootstrap alert class, and give it the standard blue info color, and a nice fade-in. Also we add a button to dismiss the message. Since the standard flash object contains both the type and the message we'll have to specify them in the opening block, but we'll only use the message for this course. 
+Place it right above the <%= yield %> statement, and right under the header. 
+
+./app/views/layouts/application.html.erb
+...
+	<%= render 'layouts/header' %>
+	
+	<% flash.each do |type, message|  %>
+		<div class="alert alert-info fade-in">
+			<button class="close" data-dismiss="alert">x</button>
+			<%= message %>
+		</div>
+	<% end %>
+
+	<%= yield %>
+...
+
+Step 2
+Now that we have the Application.html.erb view open, we should also add a container around the yield, so everything looks just a bit nicer. 
+
+./app/views/layouts/application.html.erb
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stukplaces</title>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+	
+	<%= render 'layouts/header' %>
+
+	<% flash.each do |type, message|  %>
+		<div class="alert alert-info fade-in">
+			<button class="close" data-dismiss="alert">x</button>
+			<%= message %>
+		</div>
+	<% end %>
+
+	<div class="container">
+		<%= yield %>
+	</div>
+
+</body>
+</html>
+
+Step 3
+And we should also update the login and logout links in our header, of course only showing the login and signup if there is not a current_user. 
+Open your _header.html.erb partial, and add the links to login, logout, signin or signout.
+Don't forget to remove the old links, and to add the method: :delete to the signout path.
+
+./app/views/layouts/_header.html.erb
+
++
+        <% if current_user %>
+          <li><%= link_to 'Settings', edit_user_registration_path %> </li>          
+          <li><%= link_to 'Logout', destroy_user_session_path, method: :delete %></li>
+        <% else %>
+          <li><%= link_to 'Login', new_user_session_path %></li>
+          <li><%= link_to 'Signup', new_user_registration_path %></li>
+        <% end %>
+
+-
+        <li><a href="#">login</a></li>
+        <li><a href="#">signup</a></li>
+
+You probably know how we got these routes, but it's always good to check your routes in the terminal to make sure.
+rake routes
+
+Step 4
+As final, let's add a finishing touch to our flash messages by styling them. 
+Open the app/assets/stylesheets/pages.scss file, and the following class to style it.
+Give the .alert{} class the an absolute position, a z-index of 1, and a fixed width of 200px.
+
+./app/assets/stylesheets/pages.scss
+
+// Place all the styles related to the Pages controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+.alert{
+	position: absolute;	
+	z-index: 1; 
+	width: 200px ; 
+}
+
+Step 5
+If you didn't do so, this would be a great moment to restart your server, and head over to the localhost:3000/ to test our new layout, and the flash messages! 
+Signup for your app, and be sure all your new links and flash messages work. 
+
+Step 6
+Time to save our work, and commit it to Github.
+
+git commit -m "Add Flash messages"
+
+
 
 ###########
-15
-INSTALL SIMPLE FORM
+20
+ADDING GRAVATARS
+
+Step 1
+Our users have no profile picture yet, and yet there is very simple way for each user to have a profile image. On the webs, they're called 'gravatar', and if you head over to www.gravatar.com you'll see exactly what I mean. 
+There is even a gem for this, so let's add it to our Gemfile!
+gem 'gravatarify', '~> 3.0.0'
+
+And run bundle as usual
+bundle
+
+Step 2
+Let's add the horizontal devider <hr> underneath the button in our app/views/devise/registrations/edit.html.erb form.  
+And just below the <hr > we'll add the gravatar_tag helper that comes with the gem, and give the gravatar a size of 100 pix. 
+Also add a link for the user to change the avatar, and point it to the gravatar website. 
+<<EOF
+  <div class="form-actions">
+    <%= f.button :submit, "Update" %>
+  </div>
+  
+  <hr>
+  <%= gravatar_tag current_user.email, size: 100 %>
+  <%= link_to 'change avatar', 'http://en.gravatar.com' %>
+
+<% end %>
+
+<h3>Cancel my account</h3>
+
+<p>Unhappy? <%= link_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?" }, method: :delete %></p>
+
+<%= link_to "Back", :back %>
+
+Step 3
+Start up your server, and go to your user Settings Page to see your Profile image in action!
+
+what if there is no image displayed?
+If there is no image displayed, the user needs to sign up for gravatar.
+Gravatars are widely used and most users will have them. 
+
+Step 4
+Looks good, save our work and commit it to Github.com
+
+git commit -m "Added user Gravatar"
 
 ###########
-15
-INSTALL SIMPLE FORM
+21
+GENERATING THE PLACES SCAFFOLD
+
 
 ###########
-15
-INSTALL SIMPLE FORM
+22
+PLACES NEED A USER
 
 ###########
-15
-INSTALL SIMPLE FORM
+23
+PLACES NEED LOCATION
 
 ###########
-15
-INSTALL SIMPLE FORM
+24
+MAKING PLACES BETTER
 
 ###########
-15
-INSTALL SIMPLE FORM
+25
+REVIEWS
 
 ###########
-15
-INSTALL SIMPLE FORM
+26
+SCORES
 
 ###########
-15
-INSTALL SIMPLE FORM
+27
+AVERAGE
 
 ###########
-15
-INSTALL SIMPLE FORM
+28
+DASHBOARD
 
 ###########
-15
-INSTALL SIMPLE FORM
+29
+BETTER LANDING PAGE
 
 ###########
-15
-INSTALL SIMPLE FORM
+30
+SEARCH
 
 ###########
-15
-INSTALL SIMPLE FORM
+31
+FINISHING TOUCHES
 
 ###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
-
-###########
-15
-INSTALL SIMPLE FORM
+32
+DEPLOY
 
 
