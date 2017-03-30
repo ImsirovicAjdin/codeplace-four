@@ -808,10 +808,143 @@ class Place < ActiveRecord::Base
 	after_validation :geocode 
 end
 
+Step 5
+To test if this works, we need to update our app/views/places/show view, and display the two new fields to the view. 
+./app/views/places/show.html.erb
+<<EOF
+<p>
+  <strong>User:</strong>
+  <%= @place.user_id %>
+</p>
++
+    <p>
+      <%= @place.longitude %>
+      <%= @place.latitude %>
+    </p>
 
+<%= link_to 'Edit', edit_place_path(@place) %> |
+<%= link_to 'Back', places_path %>
 
+Now restart your server, and head over to your browser. Go to the localhost:3000/places/new, and create a new Place, with your City address.
 
+Step 6
+Now, before we can use these Coordinates in the Google Maps Api, we need to get an Api key from the google developers section.  Here is how you get it.
+https://developers.google.com/maps/documentation/javascript/get-api-key
 
+Press the [ GET A KEY ] button, and follow the procedure.
+
+And as always,
+store the API keys somewhere convenient, so that you can find them later on. 
+
+Step 7
+Now, if we follow the Google Developers Guide instructions, we know that we have to add  our API key in the head section of our page, we can copy the code from the instructions and simply add our own key. 
+On a production server you want to configure ENVironment key's, but for now this is just fine. Open your application.html.erb, and add the script snippet from the google documentation.
+./app/views/layouts/application.html.erb
+<<BOF
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stukplaces</title>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+     <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    </script>
+...
+
+Make sure, you replace 'YOUR_API_KEY', with your API key.
+Step 8
+We also need to place the map somewhere, so in the app/views/places/show.html.erb, add a div with the id of 'map-canvas', as per the documentation. Also, specify a style, with the width and height for the map, like so:
+./app/views/places/show.html.erb
+<<EOF
++
+<div id="map-canvas" style="width: 230px; height:230px"></div>
+
+    <%= link_to 'Edit', edit_place_path(@place) %> |
+    <%= link_to 'Back', places_path %>
+
+Step 9
+Next, we need to place the final part of the javascript, also on the bottom of the places:show page. 
+
+./app/views/places/show.html.erb
+<<EOF
+
+<%= link_to 'Edit', edit_place_path(@place) %> |
+<%= link_to 'Back', places_path %>
++
+    <script type="text/javascript">
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map-canvas'), {
+          center: {lat: -34.397, lng: 150.644},
+          zoom: 8
+        });
+      }
+    </script>
+
+Then, we add our coordinates.
+./app/views/places/show.html.erb
+<<EOF
+<script type="text/javascript">
+  var map;
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map-canvas'), {
+    +
+      center: {lat: <%= @place.latitude %>, lng: <%= @place.longitude %>},
+      zoom: 8
+    });
+  }
+</script>
+
+And if we refresh the browser, you'll see a google map with the place you specified.
+
+But the user has to guess where our address is right now, so let's go back to the documentation and look up how we can add a nice marker.
+
+Step 10
+In order to have a marker on our map, we need to remodel our maps script a little bit. 
+First, we want to place the coordinates into a separate variable, and replace the center content with this new variable, inside the map object contstructor.
+
+./app/views/places/show.html.erb
+<script type="text/javascript">
+
+  var map;
+  var myCenter = {lat: <%= @place.latitude %>, lng: <%= @place.longitude %>};
+  
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map-canvas'), {
+      center: myCenter,
+      zoom: 13
+    });
+  }
+</script>
+
+Then add the Marker object constructor, and give it the attributes it needs, the position and the map.
+
+./app/views/places/show.html.erb
+<script type="text/javascript">
+
+  var map;
+  var myCenter = {lat: <%= @place.latitude %>, lng: <%= @place.longitude %>};
+
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map-canvas'), {
+      center: myCenter,
+      zoom: 13
+    });
+    var marker = new google.maps.Marker({
+      position: myCenter, 
+      map: map, 
+    });
+  }
+</script>
+
+And after refreshing the browser (and sometimes restarting the server), we'll see a big fancy marker on our map. Awesome right?!
+
+Step 11
+Time to commit our work, and save it to Github!
+
+git commit -m "Add Maps to Places"
 
 
 ###########
