@@ -694,10 +694,125 @@ git comit -m "Scaffold Users, and update the views"
 ###########
 22
 PLACES NEED A USER
+Step 1
+I Already mentioned it in the previous chapter, that we will change the way the :user_id is assigned to a place, so let's do that now.
+Open the PlacesController.rb, and go to the bottom of the controller. 
+Remove the :user_id from the place_params.
+./app/controllers/places_controller.rb
+<<EOF
+
+    # Never trust parameters from the scary internet, only allow the white list through.
+    def place_params
+    -
+      params.require(:place).permit(:name, :address, :phone, :description, :website, :user_id)
+    +
+      params.require(:place).permit(:name, :address, :phone, :description, :website )
+
+    end
+end
+
+Step 2
+Now in the create action, assign the @place variable to be constructed by calling current_user.places.new, like so:
+
+./app/controllers/places_controller.rb
+
+replace:
+    @place = Place.new(place_params)
+with:
+    @place = current_user.places.new(place_params)
+
+Step 3
+And to make sure there is a current user, we'll use the :authenticate_user! method from devise, but only on the :new, :edit, :create, :update and :destroy actions.
+
+./app/controllers/pages_conroller.rb
+<<BOF
+class PlacesController < ApplicationController
++  
+  before_action :authenticate_user!, only: [:new, :edit, :create, :update, :destroy ]
+
+Step 4
+And finally, we can remove the :user_id field from the app/views/places/_form.html.erb
+./app/views/places/_form.html.erb
+<<BOF
+<%= simple_form_for(@place) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :name, required: true %>
+    <%= f.input :address, required: true %>
+    <%= f.input :description %>
+    <%= f.input :phone, required: true %>
+    <%= f.input :website, required: true %>
+-
+    <%= f.input :user_id, required: true %>
+  </div>
+
+This should do the trick, restart the server if needed and go to your localhost:3000, and try to create a new place. 
+
+Step 5
+Save and commit our work to Github.
+
+git commit -m "Added current user to places"
+
+
 
 ###########
 23
 PLACES NEED LOCATION
+In this chapter, we'll be adding a map to our places, using google maps. 
+For that, we will be needing an api key for google maps.
+Maps need special coordinates in order to function, these you may have seen before, are called longitude and latitude.
+
+Step 1
+To convert an address to these longitude and latitude coordinates, we will be using a gem provided by alexreisner/geocoder .
+When you're done reading the documentation you can add it to the gemfile, and run the bundle command.
+https://github.com/alexreisner/geocoder
+
+./Gemfile
+<<EOF
+gem 'geocoder'
+
+install it
+bundle
+
+Step 2
+Before we move on, we need to remove all the Places that are stored in the database at this moment. Open up a console, and run Place.delete_all
+
+rails c 
+Place.delete_all
+
+Step 3
+Next we need to add the latitude and longitude attributes to the Places. So, let's run a migration for this, and have them both be of the float type 
+
+rails g migration AddMapToPlaces latitude:float longitude:float
+
+And after inspection of the migration file, run migrate it to the database.
+
+rake db:migrate
+
+Step 4
+Now, according to the documentation, we need to update the Places.rb model.
+We need to tell geocoded from which field too 'decode', and to ensure the :geocoded address is validated. 
+
+./app/models/place.rb
+class Place < ActiveRecord::Base
+	validates_presence_of :name 
+	validates_presence_of :phone 
+	validates_presence_of :address 
+	validates_presence_of :website 
+	validates_presence_of :user_id 
+
+	belongs_to :user
++	
+	geocoded_by :address 
+	after_validation :geocode 
+end
+
+
+
+
+
+
 
 ###########
 24
