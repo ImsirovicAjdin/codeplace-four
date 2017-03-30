@@ -539,6 +539,156 @@ git commit -m "Added user Gravatar"
 ###########
 21
 GENERATING THE PLACES SCAFFOLD
+Before we continue I'd like to point out that normally on intermediate or advanced courses we don't use any scaffolding. But for time-saving purposes we will scaffold the Places.
+
+Step 1
+So let's start with Scaffolding the Places.
+We want the places to have:
+    name:string
+    address:string ( for later with the geocoder)
+    description: text
+    phone:string
+    website:string
+    user_id:string
+And we'll be giving the extra flag to create the migration, without any stylesheets.
+
+rails g scaffold Places name:string address:string description:text phone:string website:string user_id:integer --no-stylesheets
+ 
+
+And after you have inspected the migration file, you can run the migration.
+
+rake db:migrate
+
+Step 2
+Next we want to validate the presence of the Places fields, for the name, phone, address, website and user_id. Open the Places.rb model, and add the validations.
+
+./app/models/places.rb
+
+class Place < ActiveRecord::Base
+	validates_presence_of :name 
+	validates_presence_of :phone 
+	validates_presence_of :address 
+	validates_presence_of :website 
+	validates_presence_of :user_id 
+end
+
+Step 3
+We know that the places will be owned by a User, so we might as well continue with adding associations while we have the Places.rb model still open in our text editor.
+
+./app/models/places.rb
+class Place < ActiveRecord::Base
+	validates_presence_of :name 
+	validates_presence_of :phone 
+	validates_presence_of :address 
+	validates_presence_of :website 
+	validates_presence_of :user_id 
+
+	belongs_to :user
+end
+
+This also means we need to update the User.rb model, and say, that it has_many :places
+
+./app/models/user.rb
+class User < ActiveRecord::Base
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable
+
+   validates_presence_of :name      
+   has_many :places
+end
+
+Step 4
+When a user would visit our app now, there won't be a way to reach the places. 
+Let's replace the current a:href stub in our _header.html.erb with a proper rails link_to 'places' link, and have it point to the places:index action, to show all the places. 
+
+./app/views/layouts/_header.html.erb
+...
+      (<ul class="nav navbar-nav">)
+-
+        <li class="active"><a href="#">Places<span class="sr-only">(current)</span></a></li>
++
+        <li><%= link_to 'Places', places_path %></li>
+      (</ul>)
+...
+
+Step 5
+If we now start the server, and go to our localhost:3000, we should have a working places link, and a Page showing all the listings.
+
+This doesn't look very good if you ask me, so open the views/places/index.html.erb and let's make it look better. 
+Let's start with removing elements we won't need to be shown on the index view. From the < table head> we remove the user, colspan, and description rows. And let's also remove them from the table body, including the :show :edit :delete actions, because these will be placed in a separate dashboard.
+
+./app/views/places/index.html.erb
+
+-
+      <th>Description</th>
+
+      <th>User</th>
+      <th colspan="3"></th>
+
+-
+        <td><%= place.description %></td>
+
+        <td><%= place.user_id %></td>
+        <td><%= link_to 'Show', place %></td>
+        <td><%= link_to 'Edit', edit_place_path(place) %></td>
+        <td><%= link_to 'Destroy', place, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+
+Step 6
+There is a paragraph tag in the top of the view for error notifications, since we now have flash messages we won't be needing this anymore. 
+After you have removed the <p id="notice"><%= notice %></p> there are two more things left to do in this view.  
+On the bottom, we have a line with a link to creating a new Place record. 
+This should only be visible to logged-in users, so let's add these last two updates.      
+
+./app/views/places/index.html.erb
+-
+<p id="notice"><%= notice %></p>
+
++
+<% if current_user %> 
++
+<% end %> 
+
+And finally, add the bootstrap magic to the table, to make it an bootstrap table!
+
+./app/views/places/index.html.erb
+<<BOF
+<h1>Listing Places</h1>
++
+<table class="table">
+...
+
+Step 7
+When we now start our server and go to the localhost:3000/places view, you'll notice that it looks a lot nicer!
+
+Now some final, adjustments on the app/views/places/_form.html.erb partial to give the fields client side validations to, by stating required: true on those fields. 
+./app/views/places/_form.html.erb
+<%= simple_form_for(@place) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
++
+    <%= f.input :name, required: true %>
+    <%= f.input :address, required: true %>
+    <%= f.input :phone, required: true %>
+old (keep it!, but don't change it)
+    <%= f.input :description %>
++
+    <%= f.input :website, required: true %>
+    <%= f.input :user_id, required: true %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit %>
+  </div>
+<% end %>
+
+And with these updates our Places should look and work nice. Currently, we'll have to assign the :user_id manually, but we'll fix that in the upcoming lectures. 
+
+Step 8
+Let's save our work, and push it to Github.
+git comit -m "Scaffold Users, and update the views"
 
 
 ###########
