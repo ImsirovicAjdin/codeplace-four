@@ -837,7 +837,7 @@ And as always,
 store the API keys somewhere convenient, so that you can find them later on. 
 
 Step 7
-Now, if we follow the Google Developers Guide instructions, we know that we have to add  our API key in the head section of our page, we can copy the code from the instructions and simply add our own key. 
+Now, if we follow the Google Developers Guide instructions (https://developers.google.com/maps/documentation/javascript/tutorial), we know that we have to add  our API key in the head section of our page, we can copy the code from the instructions and simply add our own key. 
 On a production server you want to configure ENVironment key's, but for now this is just fine. Open your application.html.erb, and add the script snippet from the google documentation.
 ./app/views/layouts/application.html.erb
 <<BOF
