@@ -950,10 +950,77 @@ git commit -m "Add Maps to Places"
 ###########
 24
 MAKING PLACES BETTER
+Step 1
+Before we move on with creating our reviews we should improve the design of our Places show pages, open the app/views/places/show.html.erb and remove the old content.
+Just keep the <div >with the map-canvas, and the <script ...</script>, but remove everything else.
+./app/views/places/show.html.erb
+
+That includes removing the :edit and :back link, because we'll add them to the dashboard later on.
+
+Step 2
+We want our view to be divided into 2 main columns, the left side that will display the Place and its attributes, including the Map. And the second on the right will display the reviews and the review form that we have not created yet, but we can place a stub for now. 
+So let's start with adding the bootstrap row, and add two columns, on with the size of 3, and the other with the size of 9, and place a <h3> tag inside each column, with either the Title for that section, or the place.name. 
+./app/views/places/show.html.erb
+<<BOF
++
+ <div class="row">
+  <div class="col-md-3">
+    <h3><%= @place.name %></h3>
+  </div>
+  <div class="col-md-9">
+    <h3>Reviews by People</h3>
+    
+  </div>
+</div>
+old code, don't touch
+<div id="map-canvas" style="width: 230px; height:230px"></div>
+
+Step 3
+Let's continue by filling in the Place column with the Place attributes, add each attribute of the place inside of a <p> paragraph, and give it a <strong> Title, like so: 
+./app/views/places/show.html.erb
+<div class="row">
+    
+  <div class="col-md-3">
+    <h3><%= @place.name %></h3>
+    <p>
+      <strong>Address</strong>
+      <%= @place.name %>
+    </p>
+    <p>
+      <strong>Phone</strong>
+      <%= @place.phone %>
+    </p>
+    <p>
+      <strong>Website</strong>
+      <%= @place.website %>
+    </p>
+    <p>
+      <strong>Description</strong>
+      <%= @place.description %>
+    </p>
+  </div>
+
+Step 4
+And last, move the div with the map-canvas id to the bottom of the first column, right below the description paragraph.
+./app/views/places/show.html.erb
+      <strong>Description</strong>
+      <%= @place.description %>
+    </p>
+    <div id="map-canvas" style="width: 230px; height:230px"></div>  
+  </div>
+  
+Step 5
+Check your browser, your show page should now look something like this.
+Step 6
+If you're happy with your progress, save your work, and Git commit!
+
+git commit -m "Make places better"
+
 
 ###########
 25
 REVIEWS
+
 
 ###########
 26
