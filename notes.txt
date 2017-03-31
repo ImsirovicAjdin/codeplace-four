@@ -2057,6 +2057,112 @@ git commit -m "Add basic search"
 ###########
 31
 FINISHING TOUCHES
+Step 1
+Before deploying the app we need to address some final finishing touches, there are always some minor improvements, for instance on the places/index view you'll notice that we can 'click' on the places. Let's open the app/views/places/index and add the links.
+./app/views/places/index.html.erb
++
+        <td><%= link_to place.name, place_path(place) %></td>
+
+While we are modifying the index page we should also add the average rating to this view.
+Let's add a <th > to with the title 'rating', and add a td.  You know by now how to use the Raty plugin, so add a div to the td, with the class of avarage_ #place.id.
+./app/views/places/index.html.erb
+...
++
+      <th>Rating</th>
+old
+    </tr>
+  </thead>
+...
+
+...
++
+        <td><div class="average_<%= place.id %>"></div></td>
+old
+      </tr>
+    <% end %>
+  </tbody>
+...
+
+And we can copy the code from the previous step again to the bottom of the page. Make sure there inside the <script> tag.
+./app/views/places/index.html.erb
+<script>
+    <% @reviews.each do |review| %>
+      $(".score_<%= review.id %> ").raty({
+      starOn: "<%= image_path('star-on.png') %>",
+      starOff: "<%= image_path('star-off.png') %>",
+      score: '<%= review.score %>',
+      readOnly: true 
+    });
+  <% end %>
+</script>
+
+Then we modify it to use the @places variable instead of the @review, and point to the .average_#place.id instead of the score, and update the score: with place.total_average. 
+./app/views/places/index.html.erb
+<script>
+    <% @places.each do |place| %>
+      $(".average_<%= place.id %> ").raty({
+      starOn: "<%= image_path('star-on.png') %>",
+      starOff: "<%= image_path('star-off.png') %>",
+      score: '<%= place.total_average %>',
+      readOnly: true 
+    });
+  <% end %>
+</script>
+
+And our places index page should now link to the place, and show the rating!
+
+Step 2
+Now, if we login into our app, we have a similar problem on the dashboard, let's add the links here too. 
+Note that on the review column, we need to point the link to the review.place, since the review itself doesn't have a separate view. 
+./app/views/pages/dashboard.html.erb
+LN24
+-
+        <td><%= place.name %></td>
+				<td><%= link_to place.name, place_path(place) %></td>
++
+
+LN49
+-
+  <td><%= review.place.name %></td>
+	<td><%= link_to review.place.name, place_path(review.place) %></td>
++
+
+Step 3
+What happens if you now click on the 'edit', for any one of the reviews? 
+We get a Template is Missing error.
+So let's create the edit view, in our app/views/reviews/ create the edit.html.erb file. 
+Add a <h3> tag With the title "Edit review",  and render the reviews form.
+touch ./app/views/reviews/edit.html.erb
+
+<h3>Edit review</h3>
+<%= render 'form' %>
+
+Now refresh the browser, and yet another error is displayed. 
+This time the error message is the undefined method 'id' for nil, on the place.id 
+The reason for this, is that we don't have a @place variable, so there is no place.id 
+Open the ReviewsController, and update the :edit action.
+Add the @place variable, and set it to the @review.place. 
+./app/controllers/reviews_controller.rb
+<<BOF
+class ReviewsController <ApplicationController
+	before_action :authenticate_user!
+	before_action :set_review, only: [:edit, :update, :destroy]
+
+	def edit
+    @place = @review.place 
+	end
+
+  def create
+    @review = current_user.reviews.new(review_params)
+
+Step 4
+If we now refresh our browser we can edit our reviews! 
+
+That's it, our app is ready to be shipped to a production server!
+Save our work, and commit it to Github. 
+
+git commit -m "Finishing touches"
+
 
 ###########
 32
