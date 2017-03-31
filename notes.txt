@@ -1,5 +1,7 @@
 Directory Course from Codeplace, on Rails 5
 
+https://github.com/stukio/stukplaces/
+
 1
 gem install rails
 rails -v // 5.02
@@ -1867,6 +1869,106 @@ git commit -m "Add the dashboard"
 ###########
 29
 BETTER LANDING PAGE
+Step 1
+Let's update our landing page now, because this really doesn't look very exciting for new visitors.
+
+I think it would be nice to have a full width background on our home page.
+I've found a great little code snippet that does exactly that! 
+You can find it on css-tricks.com . 
+https://css-tricks.com/perfect-full-page-background-image/
+And I'll be using a nice blurred image as a background, just google for a nice background image to use, and place it in the assets directory.  I've learn a neat little trick to open the app directory so you don't have to go through all the folders, just type open . in the root of your folder, and your finder will open up the app folder.
+
+And place your downloaded background image to the app/assets/images/ folder
+
+Step 2
+Next we want to update the views/pages/home view, start with deleting all the current content. 
+
+./app/views/pages/home.html.erb
+In our home view we want to have a nice big inviting button that says 'Find places you'll fall in love with', and that should be inside of div of course. Let's also give this div to more classes, one from bootstrap with 'text-center', and the other would be 'landing-title' which we will devine our selfs. 
+./app/views/pages/home.html.erb
+<div class="text-center landing_title">
+	<%= link_to "Find places you'll fall in love with!", places_path, class: 'btn btn-default btn-lg' %>
+</div>
+
+Open the pages.scss, and specify the class of landing_title to have padding to the top of 200px.
+
+./app/assets/stylesheets/places.scss
+// Place all the styles related to the Pages controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+.alert{
+	position: absolute;	
+	z-index: 1; 
+	width: 200px ; 
+}
+
+.landing_title{
+	padding-top: 200px; 
+}
+
+Now we have nice button displayed roughly centered of our view. 
+Step 3
+Time to add the background snippit css-tricks.com, for this we need a div holding the content of the view. 
+And here is the problem, if you remember from on of the previous steps, we already have a <div class="container"> surrounding the yield, so every view will be rendered inside this container, thus the image will always be rendered inside that container, and won't be the full width of the viewport. 
+Let's do a simple 'if' statement to check if the current_page is the root_path, so that it won't render the <div class="container"> but a different div we specify for the landing page, eg <div class="landing">, like so:
+./app/views/layouts/application.html.erb
+<<EOF
+			<%= message %>
+		</div>
+	<% end %>
+
+	<% if current_page?(root_path) %>
+		<div class="landing">
+	<% else %>
+		<div class="container">
+	<% end %>
+		<%= yield %>
+	</div>
+
+</body>
+</html>
+
+Now continue by adding the css snippet, add the background, set it to be no-repeat center center and give it a fixed position. Then specify to cover the background for all browsers, and set the height to be 100vh ;
+And we also want to set the default margin for the navbar to be 0 at the bottom, so we won't have any empty space between the header and the div. 
+./app/assets/stylesheets/pages.scss
+<<EOF
+.landing{
+    background: image-url("blurred.jpg") no-repeat center center fixed ;
+    -webkit-background-size: cover; 
+    -moz-background-size: cover; 
+    -o-background-size: cover;
+    height: 100vh; 
+}
+
+.navbar{
+	margin-bottom: 0; 
+}
+
+Step 4
+I Think we can make the button a bit nicer too, let's remove the background, make the border a bit thicker, and change the border-color when we hover over it.
+First add a extra class to our button on the home page, call it btn-landing . 
+./app/views/pages/home.html.erb
+<div class="text-center landing_title">
+	<%= link_to "Find places you'll fall in love with!", places_path, class: 'btn btn-default btn-lg btn-landing' %>
+</div>
+
+Then update the css attributes for the button, remove the background, set the border, and add the hover state with a different border color.
+./app/assets/stylesheets/pages.scss
+.navbar{
+	margin-bottom: 0; 
+}
+
+.btn-landing{
+	background: none ; 
+	border: solid ; 
+	&:hover{
+		border-color: green ;
+	}
+}
+
+Let's go to the browser and see the result!
+
+git commit -m "Improved landing page"
 
 ###########
 30
