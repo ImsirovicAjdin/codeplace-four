@@ -1398,11 +1398,164 @@ Great success! Save our work, and commit it to Github.
 git commit -m "Add reviews"
 
 
-
-
 ###########
 26
 SCORES
+
+Step 1
+Our reviews are working nice, so it's time to add some kind of rating to our application. I'd like to implement the well-known 'star rating' to our application. This way we can rate a place by giving stars, and we can easily see how many stars where given. 
+There is a pretty awesome jQuerry Library that has everything we need. You can find the documentation on Github.
+https://github.com/wbotelhos/raty
+Go to the github page for raty, ...
+https://github.com/wbotelhos/raty/blob/master/lib/jquery.raty.js
+
+...and copy the contents of the /lib/jquery.raty.js into a new javascript file, in your app/assets/javascripts folder, and name it raty.js
+./app/assets/javascripts/raty.js
+
+Step 2
+From the same github repo, find the /lib/images folder, and copy the 'star-on.png' and 'star-off.png' images to your assets/images folder. 
+
+Step 3
+Now we need to have a place to keep the score. Let's create a Migration to add the :score field to the Reviews model.
+
+rails g migration AddScoreToReviews score:integer
+
+But before running the migration, we should open it up and inspect it, but this time we'll add the default value of '0' to the field, so a review will always have a score. 
+
+./app/db/migrate/.....add_score_to_reviews.rb
+...
+    add_column :reviews, :score, :integer, default: 0
+...
+
+Then migrate it to the database
+
+rake db:migrate
+
+Step 4
+It would be a good idea to enforce some constraints on the Review.rb model, so that every time a review is created there will be content and a score. 
+
+./app/models/review.rb
+class Review < ActiveRecord::Base
+	belongs_to :user 
+	belongs_to :place
+
+	validates_presence_of :content
+	validates_presence_of :score 
+end
+
+We added a :score field to our Reviews, so we need to update the params in the reviews_controller as well, open it up, look for the review_params, and add the :score attribute to it. 
+
+./app/controllers/reviews_controller.rb
+<<EOF
+
+  def review_params
+  	params.require(:review).permit(:content, :place_id, :score)
+  end
+end
+
+Step 5
+Now it's time to add an input field to our review/_form, so right under the hidden_field in the review/_form partial, we will add a line for the :score. 
+./app/views/reviews/_form.html.erb
+...
+    <%= f.hidden_field :place_id, required: true, value: @place.id %>
+    <%= f.input :score, required: true %>
+  </div>
+...
+
+After we restarted the server, our places view now has the :score field.  
+
+Step 6
+Now we are going to add the Raty script to our review/_form, This will be javascript, but very basic, so you won't have any trouble following along. 
+Start with adding an empty div underneath the score field, and give it the class of 'score'. 
+Next, open a script tag on the bottom of the form partial, and call the raty script on the '.score' div that we just created, and.
+./app/views/reviews/_form.html.erb
+<<EOF
+<% end %>
+
+<script>
+  $(".score").raty({
+
+  });
+</script>
+
+And now we will tell Raty the sources of our images, the target, to keep the target, and the target type.
+Everything BUT the target you can find in the documentation, but to find your target, you have to open the browser inspector, and look for the ID of the :score input_field.
+
+
+When you found the ID for the review_score, we can continue with filling in our Raty script with the sources, target, and target type, 
+./app/views/reviews/_form.html.erb
+
+<script>
+  $(".score").raty({
+    starOn: "<%= image_path('star-on.png') %>",
+    starOff: "<%= image_path('star-off.png') %>",
+    target: "#review_score",
+    targetKeep: true, 
+    targetType: "number"
+  });
+</script>
+
+Go over to the browser, and see the score field now is dynamically populated by hovering or clicking on one of the stars. 
+
+This means that we can now change the f.input :score into a hidden field as well because we don't have to display it to the user anymore. 
+
+./app/views/reviews/_form.html.erb
+<<BOF
+<%= simple_form_for(@review) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :content, required: true %>
+    <%= f.hidden_field :place_id, required: true, value: @place.id %>
+    <%= f.hidden_field :score, required: true %>
+    <div class="score"></div>
+
+Step 7
+We can now add ratings to our review by clicking on an image, let's continue by adding the same format of showing the :score with raty.js to our reviews.  
+In order to do this, we need to do two things.
+ First we need to define which #id raty should target because every rating is unique. 
+And second, we need to create a new raty script that displays the score. 
+Let's start with opening the app/views/reviews/_review partial, and create a div's to be populated by their unique score #ID
+./app/views/reviews/_review.html.erb
+    <div class="score_<%= review.id %>"></div>
+    
+Next, open the app/views/places/show view, and on the bottom, inside the javascript tags, we want to iterate over each review, and add the rating to the Raty score: field.  
+You can copy the Raty script from the reviews/_form, and remove all unnecessary elements. Paste this inside the reviews iteration block. 
+./app/views/places/show.html.erb
+<<EOF
+  }
+
+  <% @reviews.each do |review| %>
+      $(".score").raty({
+      starOn: "<%= image_path('star-on.png') %>",
+      starOff: "<%= image_path('star-off.png') %>",
+      target: "#review_score",
+      targetKeep: true, 
+      targetType: "number"
+    });
+  <% end %>
+
+</script>
+
+And next we open the app/views/places/show, to add the script to populate these #ID's with the corresponding score. Start by copying over the script from the reviews/_form into the places/show view.
+./app/views/places/show.html.erb
+
+According to the documentation, we need to have two attributes, the score: and a statement that says that it should be read-only. 
+And because we updated our _review partial to have a dynamic score_#id,  we need to embed this to the selector as well. 
+./app/views/places/show.html.erb
+
+  <% @reviews.each do |review| %>
+      $(".score_<%= review.id %> ").raty({
+      starOn: "<%= image_path('star-on.png') %>",
+      starOff: "<%= image_path('star-off.png') %>",
+      score: '<%= review.score %>',
+      readOnly: true 
+    });
+  <% end %>
+
+Back to the browser, refresh, and rate your new Score system with 5 stars as often as you can!
+
+git commit -m "Add Raty for Rating"
 
 ###########
 27
