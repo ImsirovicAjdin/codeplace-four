@@ -1020,6 +1020,384 @@ git commit -m "Make places better"
 ###########
 25
 REVIEWS
+Step 1
+Every good place needs a solid review embedded in the view. We previously used scaffolds to generate the views, controllers and the Place model for us, but for the reviews, we'll create everything manually. 
+The reviews will be shown inside of the places show view, so a review needs a place_id to know where it should be displayed. We also want a user to be assigned to the review, and of course a review should contain text. 
+This leads us to create the following review Model
+
+rails g model Review user_id:integer place_id:integer content:text
+
+Inspect the generated migration file in the app/db/migrate folder before you run it.
+
+rake db:migrate
+
+Step 2
+Continue by defining the associations,
+Lets start with the User.rb model, a User has many reviews, and if the User would be removed, the reviews from that user should also be removed, so there would be no 'orphans' in our database. We actually forgot to do this on the places, so this would be a good time to add this dependent: :destroy to the places to.
+./app/models/user.rb
+<<EOF
+   validates_presence_of :name      
+   has_many :places, dependent: :destroy 
+   has_many :reviews, dependent: :destroy
+end
+
+A place can have many reviews, again, we should make sure no orphans remain when the place is destroyed.
+./app/models/places.rb
+<<EOF
+	belongs_to :user
+	geocoded_by :address 
+	after_validation :geocode 
+
+	has_many :reviews, dependent: :destroy
+end
+
+And finally the Review.rb model, the review belongs to the user, and the place. 
+
+./app/models/review.rb
+class Review < ActiveRecord::Base
+	belongs_to :user 
+	belongs_to :place
+end
+
+Step 3
+The Next task to do will be to create a controller, we could use the rails g controller command, but this would create a lot of files that we don't need. So let's create it by either the terminal command: touch app/controllers/reviews_controller.rb or by just using your mouse, and do a right click on the controller folder. 
+./app/controllers/reviews_controller.rb
+class ReviewsController <ApplicationController
+
+end
+
+Step 4
+Here is pro-tip, although we didn't want to run the scaffold to create unnecessary files, we also won't want to repeat our selfs. Ruby/Rails programmers even have an idiom for this, called -DRY-,  "don't repeat yourself!" 
+I like to peak at already existing example to see the structure, and maybe even copy code from one file to the other. 
+If you want to copy-paste or manual retype everything is completely up to you, but I'll copy some code from the PlacesController into the ReviewsController, and simply edit it to be suited for the reviews. 
+Here's how I do it, I open the two files next to each other in my Sublime
+
+Then I will simply copy the actions from the Places controller that I would want to use in the Reviews Controller, these will be the :create, :update, and :destroy actions. 
+ don't get confused by the @place references in the ReviewsController, we'll update that now
+ 
+./app/controllers/reviews_controller.rb
+class ReviewsController <ApplicationController
+  
+
+  def create
+    @place = current_user.places.new(place_params)
+
+    respond_to do |format|
+      if @place.save
+        format.html { redirect_to @place, notice: 'Place was successfully created.' }
+        format.json { render :show, status: :created, location: @place }
+      else
+        format.html { render :new }
+        format.json { render json: @place.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  def update
+    respond_to do |format|
+      if @place.update(place_params)
+        format.html { redirect_to @place, notice: 'Place was successfully updated.' }
+        format.json { render :show, status: :ok, location: @place }
+      else
+        format.html { render :edit }
+        format.json { render json: @place.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+
+  def destroy
+    @place.destroy
+    respond_to do |format|
+      format.html { redirect_to places_url, notice: 'Place was successfully destroyed.' }
+      format.json { head :no_content }
+    end
+  end
+
+
+end
+
+Of course, we now need to replace every @place with @review, all the place_params with review_params, and while we are editing, we should also remove all the format.json.lines, we won't use them in this recipe. 
+./app/controllers/reviews_controller.rb
+class ReviewsController <ApplicationController
+  
+
+  def create
+    @review = current_user.reviews.new(review_params)
+
+    respond_to do |format|
+      if @review.save
+        format.html { redirect_to @place, notice: 'Place was successfully created.' }
+      else
+        format.html { render :new }
+      end
+    end
+  end
+
+  def update
+    respond_to do |format|
+      if @review.update(review_params)
+        format.html { redirect_to @place, notice: 'Place was successfully updated.' }
+      else
+        format.html { render :edit }
+      end
+    end
+  end
+
+
+  def destroy
+    @review.destroy
+    respond_to do |format|
+      format.html { redirect_to places_url, notice: 'Place was successfully destroyed.' }
+    end
+  end
+
+
+end
+
+After this, your controller will look like this. The alert reader noticed that i didn't touch the redirect_to @place, that will be next. 
+./app/controllers/reviews_controller.rb
+class ReviewsController <ApplicationController
+  
+
+  def create
+    @review = current_user.reviews.new(review_params)
+
+    respond_to do |format|
+      if @review.save
+        format.html { redirect_to @place, notice: 'Place was successfully created.' }
+      else
+        format.html { render :new }
+      end
+    end
+  end
+
+  def update
+    respond_to do |format|
+      if @review.update(review_params)
+        format.html { redirect_to @place, notice: 'Place was successfully updated.' }
+      else
+        format.html { render :edit }
+      end
+    end
+  end
+
+
+  def destroy
+    @review.destroy
+    respond_to do |format|
+      format.html { redirect_to places_url, notice: 'Place was successfully destroyed.' }
+    end
+  end
+
+
+end
+
+Now let's update the redirects, so that on succes they will redirect_to the places_path and not the review_path, and update the notice: that will be given. 
+./app/controllers/reviews_controller.rb
+
+class ReviewsController <ApplicationController
+  
+
+  def create
+    @review = current_user.reviews.new(review_params)
+
+    respond_to do |format|
+      if @review.save
+        format.html { redirect_to place_path(@review.place) , notice: 'Review was successfully created.' }
+      else
+        format.html { render :new }
+      end
+    end
+  end
+
+  def update
+    respond_to do |format|
+      if @review.update(review_params)
+        format.html { redirect_to place_path(@review.place), notice: 'Review was successfully updated.' }
+      else
+        format.html { render :edit }
+      end
+    end
+  end
+
+
+  def destroy
+    @review.destroy
+    respond_to do |format|
+      format.html { redirect_to place_path(@review.place), notice: 'Review was successfully destroyed.' }
+    end
+  end
+
+
+end
+
+Step 5
+And if we inspect the Places Controller a bit more, we see that we also need to create the private section, with the two methods for setting the review, and for defining the review params. 
+
+./app/controllers/reviews_controller.rb
+<<EOF
+...
+      format.html { redirect_to place_path(@review.place), notice: 'Review was successfully destroyed.' }
+    end
+  end
+
+  private 
+
+  def set_review
+  	@review = Review.find(params[:id])	
+  end
+
+  def review_params
+  	params.require(:review).permit(:content, :place_id)
+  end
+end
+
+Then we create our hook for the set_review, to be set only on :edit, :update, and :destroy, and while we are adding hooks, we should also state that we need to have an authenticated user to perform actions on the reviews. 
+
+./app/controllers/reviews_controller.rb
+<<BOF
+class ReviewsController <ApplicationController
+	before_action :authenticate_user!
+	before_action :set_review, only: [:edit, :update, :destroy]
+
+
+  def create
+  ...
+  
+This reminds me that I actually forgot to create the :edit action, add it right above the :create method. 
+./app/controllers/reviews_controller.rb
+<<BOF
+
+class ReviewsController <ApplicationController
+	before_action :authenticate_user!
+	before_action :set_review, only: [:edit, :update, :destroy]
+
+  def edit
+  end
+
+  def create
+
+Step 6
+Now it's time to create the views and form for the reviews. This means we have to create the app/views/reviews folder first. And in this folder, we want to create the _form.html.erb partial for our reviews.
+Your folder structure, with the reviews folder, with the partial, will look like this:
+
+./app/views/reviews/_form.html.erb
+
+touch ./app/views/reviews/_form.html.erb
+c9 ./app/views/reviews/_form.html.erb
+
+Again we can copy the content from an existing form to our new form.
+Let's copy the content from the places/_form.html.erb,  into our reviews/_form.html.erb
+./app/views/reviews/_form.html.erb
+
+<%= simple_form_for(@place) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :name, required: true %>
+    <%= f.input :address, required: true %>
+    <%= f.input :description %>
+    <%= f.input :phone, required: true %>
+    <%= f.input :website, required: true %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit %>
+  </div>
+<% end %>
+
+And replace the attributes to represent the form for an @review, like so:
+./app/views/reviews/_form.html.erb
+<<BOF
+<%= simple_form_for(@review) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :content, required: true %>
+    <%= f.input :place_id, required: true %>
+  </div>
+  
+Step 7
+Let's render our review/_form in the places/show, by adding the render statement.
+./app/views/places/show.html.erb
+LN24:
+<%= render 'reviews/form' %>
+
+I think you'll know what kind of error we will get when we now would try to render our form. 
+"NoMethodError in Places#show"
+
+And probably you'll be able to predict the next error also, but for now, just follow along.
+Let's first solve the first error, open the PagesController, and create the missing @review variable in the :show action.
+./app/controllers/places_controller.rb
+...
+  def show
+  + 
+  @preview = Review.new
+  
+  end
+...
+
+And again, as you have probably guessed, we will get an error, but this time the error message says there is no path
+
+So let's add the ROUTES for our reviews to solve this,
+
+./app/config/routes.rb
+<<BOF
+Rails.application.routes.draw do
+  resources :places
++
+  resources :reviews
+
+Step 8
+Now, if all goes well, we can render the review form in our Places Show page.
+
+As you notice, you see that we need to manually add the place id to our form. 
+This should not be necessary, and we can easily fix this with the use of an hidden_field.
+
+./app/views/reviews/_form.html.erb
+<<BOF
+<%= simple_form_for(@review) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :content, required: true %>
+    <%= f.input :place_id, required: true %>
+    <%= f.hidden_field :place_id, required: true, value: @place.id %>
+  </div>
+
+Step 9
+And our last task for the reviews will be creating the _review partial, and render this in the Place Show page. 
+In the app/views/reviews create the _review.html.erb partial.
+We want to display the users gravatar, the review content, and the name from the reviewer, inside of a paragraph, so that it will be lined-out nicely. 
+./app/views/reviews/_review.html.erb
+
+Back to the app/views/places/show, add a smaller title from the h5 class, and render the @reviews
+./app/views/places/show.html.erb
+LN25-26 (+)
+  <div class="col-md-9">
+    <h3>Reviews by People</h3>
+    <%= render 'reviews/form' %>
+    <h5>All reviews</h5>
+    <%= render @reviews %>
+  </div>
+</div>
+
+And we need to tell our controller to render these reviews of course, so again back to the PlacesController, in the show action, add the @review variable, and set it to the be the reviews for t
+./app/controllers/places_controller.rb
+LN13-16
+  def show
+    @review = Review.new 
+    @reviews = @place.reviews
+  end
+
+Back to the browser to see our new reviews working!
+
+Step 10
+Great success! Save our work, and commit it to Github.
+git commit -m "Add reviews"
+
+
 
 
 ###########
