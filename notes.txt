@@ -2255,9 +2255,69 @@ production:
   timeout: 5000
 
 heroku create (this command will make a new blank heroku app)
-git push heroku master
+
 
 make change,
 git commit,
 git push heroku master
 git push (to Github)
+
+prepare our assets, before pushed to production:
+>
+RAILS_ENV=production bundle exec rake assets:precompile
+
+and this is gonna precompile all your assets.
+The devise secret key was not set.
+
+Go to config/initialsers/devise.rs file
+only paste it if it happens
+
+> press up on keyboard to run RAILS_ENV...
+
+It's finally precompiling our assets
+
+git add --all
+git commit
+git push -u origin master
+
+git push heroku master
+
+Final thing to do, heroku has a database as well, so we need to migrate changes to heroku databse, so every time you do some modifications to your database, you need to run the following command:
+
+heroku run rake db:migrate
+
+and it's gonna migrate all your created tables from dev to prod
+
+heroku open
+will open your app in your default browser
+
+###########################################
+
+Step 3
+Next we need to initialize a heroku app, and ship it! 
+ Terminal
+
+
+$
+heroku create
+Ship the latest version of the master app to heroku 
+ Terminal
+
+
+$
+git push heroku master 
+Migrate the database fields to the heroku database 
+ Terminal
+
+
+$
+heroku run rake db:migrate 
+And the final, and best heroku command there is, heroku open. 
+ Terminal
+
+
+$
+heroku open
+ Step 4
+Congratulations, you made very nifty directory application. 
+See you on the next recipe.
