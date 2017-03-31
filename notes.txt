@@ -1560,6 +1560,114 @@ git commit -m "Add Raty for Rating"
 ###########
 27
 AVERAGE
+Step 1
+Our review system is working perfectly, it only needs one more thing, the average scoring..
+For this, we need to create a few methods and a callback to invoke the method, but before that we need to create a Migration so that we can store the average rating. Let's add it to the Places Table, by creating a migration
+rails g migration AddTotalAverageRatingToPlaces total_average:integer
+
+As always, inspect the created migration file, but before running the migration, set the default total to be 0.
+This way we are sure that every place has at least a -zero- review score, which will prevent errors later on. 
+
+rake db:migrate
+
+Step 2
+Next we need a method to calculate the average for the place.
+This method needs to be on the Place.rb model itself, and will simply fetch all the reviews from the place(self), sums them up, and then divides that by the number of reviews that there are.
+
+./app/models/place.rb
+<<EOF
+	has_many :reviews, dependent: :destroy
+
+	def average_rating
+		self.reviews.sum(:score) / reviews.size 
+	end
+end
+
+No rocket science here! 
+But what if we would call this method on a Place that has -zero- reviews? 
+We have set the default for the total_average to be 0, but the reviews can be any number of size.
+You can try this out in the console, but the answer will be 'ZeroDivisionError', so we need a way handle this error. We'll add a rescue statement, to catch the ZeroDivissionError, and will set it to return 0.
+	def average_rating
+		self.reviews.sum(:score) / reviews.size 
+	rescue ZeroDivisionError
+		0
+	end
+
+Step 3
+Now that we have a Method for calculating the average, we'll continue by creating the hook or callback that will call this method, and save it to database, everytime that a review is saved. 
+First open the Review model, and place the after_save callback, and create the method.
+./app/models/review.rb
+<<EOF
+	validates_presence_of :score 
+
+	after_save :calculate_average
+
+	def calculate_average
+		
+	end
+
+end
+
+Let's continue filling in this method.
+First create a variable, and set it to the average_rating, next update the :total_average field for the place.
+Your complete method will look like this. 
+./app/models/review.rb
+<<EOF
+	def calculate_average
+		a = self.place.average_rating
+		self.place.update_attributes(total_average: a)
+	end
+
+end
+
+now, restart your rails server, and create any number of reviews. Then close down the server, open up the rails console, and type:  Place.last.average_rating
+rails c
+
+Step 4
+And last, we need a place to show the average rating of the place too. A good place would be right under the Place.name. In the app/views/places/show add another div that we can use for Raty, and give it the 'average' class. 
+
+./app/views/places/show.html.erb
+<<BOF
+<div class="row">
+  <div class="col-md-3">
+    <h3><%= @place.name %></h3>
+    <div class="average"></div>
+    <p>
+    
+Now to add the javascript, and since this will be almost the same as the review, we can copy the previous code we used for the reviews, and simply change it to display the :total_average.
+
+./app/views/places/show.html.erb
+<<EOF
+  <% end %>
+
+  $(".score_<%= review.id %> ").raty({
+    starOn: "<%= image_path('star-on.png') %>",
+    starOff: "<%= image_path('star-off.png') %>",
+    score: '<%= review.score %>',
+    readOnly: true 
+  });
+
+</script>
+
+Change the jQuery selector to get the new <div class="average".. and the set the score: to be @place.total_average
+./app/views/places/show.html.erb
+<<EOF
+  $(".average ").raty({
+    starOn: "<%= image_path('star-on.png') %>",
+    starOff: "<%= image_path('star-off.png') %>",
+    score: '<%= @place.total_average %>',
+    readOnly: true 
+  });
+
+Start your rails server, open the browser and enjoy your fully functional rating system!
+
+Step 5
+Perfect moment to save our work, and commit it to github. 
+
+git commit -m "Add the average rating"
+
+
+
 
 ###########
 28
