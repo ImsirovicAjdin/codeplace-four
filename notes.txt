@@ -1672,6 +1672,197 @@ git commit -m "Add the average rating"
 ###########
 28
 DASHBOARD
+Step 1
+Our application is shaping nicely but is also getting a bit complex to manage, so let's create a place for our user where he can manage his places and reviews. For this functionality, we want to create a dashboard. 
+To do this we need to create a view, open up a route for the dashboard, and create an action. Let's start by adding the action to the Pages Controller, like so:
+./app/controllers/pages_controller.erb
+class PagesController < ApplicationController
+  def home
+  end
+
+  def dashboard
+  end
+end
+
+Step 2
+Our dashboard will need some data, and the data is related to the user. In our dashboard we would want to show the user info, the places that the user created, and also the reviews from the user. Let's create the variables for that and give it the data we want. 
+./app/controllers/pages_controller.rb
+
+class PagesController < ApplicationController
+  def home
+  end
+
+  def dashboard
+  	@user = current_user
+  	@places = @user.places 
+  	@reviews = @user.reviews
+  end
+end
+
+You noticed that we want our dashboard to display the data for the current user, as you know we can use the before_action with the devise provided :authenticate_user! method to make sure there is a current_user. 
+We only want this for the dashboard, because the home action should be open for the public, and if there is a current_user, we should redirect them from the :home view to our :dashboard.
+./app/controllers/pages_controller.rb
+<<BOF
+class PagesController < ApplicationController
+	before_action :authenticate_user!, only: [:dashboard]
+
+  def home
+  	if current_user 
+  		redirect_to dashboard_path
+  	end
+  end
+
+Step 3
+This means we now need to do tree things, the first is the route for the dashboard, and second it would be great to add the new dashboard_path to our header. Let's start with the route: 
+./app/config/routes.rb
+<<BOF
+Rails.application.routes.draw do
+  resources :places
+  resources :reviews
+  devise_for :users, controllers: { registrations: 'registrations'}
+  root 'pages#home'
+  get 'dashboard', to: 'pages#dashboard'
+
+And add our new dashboard path in the app/views/layouts/_header, right before the settings link.
+./app/views/layouts/_header.html.erb
+LN27
+      <ul class="nav navbar-nav navbar-right">
+        <% if current_user %>
+          <li><%= link_to 'Dashboard', dashboard_path %> </li>    
+
+And the last will be creating the dashboard.html.erb view, in our app/views/layouts/pages folder. 
+
+touch app/views/pages/dashboard.html.erb
+c9 app/views/pages/dashboard.html.erb
+
+./app/views/pages/dashboard.html.erb
+Step 4
+Now that everything is set up for our dashboard view to work, we can continue with filling it in.
+
+For this we'll be using the bootstrap elements as usual, so let's start by adding a row to setup 3 columns.
+
+The first to display the user info, the second for the places of the users, and the last for the reviews. Let's divide the standaard 12 column grid into 3 columns. For the profile we'll use 2 columns, and the places and reviews will have 5 columns each.
+
+./app/views/pages/dashboard.html.erb
+<div class="row">
+	
+	<!-- profile -->
+	<div class="col-md-2">
+	</div>
+
+	<!-- places -->
+	<div class="col-md-5">
+	</div>
+
+	<!-- reviews -->
+	<div class="col-md-5">
+	</div>
+
+</div>
+
+Let's start from the top, with the users profile. Give it a h3 tag with the user name, and place the users gravatar right under it. 
+<div class="row">
+	
+	<!-- profile -->
+	<div class="col-md-2">
+	<h3><%= @user.name %>	</h3>
+	<%= gravatar_tag @user.email, size: 150 %>
+	</div>
+
+Step 5
+Let's continue with the second column, and add the places. We'll use the bootstrap table for this. 
+Let's create 3 table rows inside the table head, with the title Name, and Created. Leave the third one blank. We'll put the edit and destroy actions there. 
+./app/views/pages/dashboard.html.erb
+	<!-- places -->
+	<div class="col-md-5">
+	<h3>My Places</h3>
+	<table class="table">
+	    <thead>
+			<tr>
+				<th>Name</th>
+				<th>Created</th>
+				<th> <!-- actions --> </th>
+			</tr>
+	    </thead>
+	</table>
+
+	</div>
+
+And inside of the table body we will iterate over each place, and create a row for it with the proper attributes. 
+./app/views/pages/dashboard.html.erb
+		</thead>
+
+		<tbody>
+			<% @places.each do |place|  %>
+				<tr>
+					<td><%= place.name %></td>
+					<td><%= time_ago_in_words(place.created_at) %> ago</td>
+					<td><%= link_to "edit", edit_place_path(place) %> | <%= link_to "delete", place_path(place), method: :delete %></td>
+				</tr>
+				<% end %>
+		</tbody>
+	
+	</table>
+	
+Step 6
+One more column to go, the reviews. Again we want to use the bootstrap table, and we want to have the table place, date, and actions again in the table head, but let's also add the raty ratings again. 
+Again, begin with <h3 > title, then the table like so:
+
+./app/views/pages/dashboard.html.erb
+
+	<!-- reviews -->
+	<div class="col-md-5">
+		<h3>My Reviews</h3>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Place</th>
+					<th>When</th>
+					<th>Rating</th>
+					<th> <!-- actions --> </th>
+				</tr>
+			</thead>
+
+		</table>
+	</div>
+	
+And in the table body, we iterate over the @reviews, creating a table row for each review, and display the attributes. We had a very nice way to display the Raty ratings in our /reviews/show page, by assigning the score to the score_#id. Let's use that again for our dashboard.
+./app/views/pages/dashboard.html.erb
+					<th> <!-- actions --> </th>
+				</tr>
+			</thead>
+			<tbody>
+				<% @reviews.each do |review| %>
+				  <tr>
+					<td><%= review.place.name %></td>
+					<td><%= time_ago_in_words(review.created_at) %> ago </td>
+					<td class="score_<%= review.id %> "></td>
+					<td><%= link_to "edit", edit_review_path(review) %> | <%= link_to "delete", review_path(review), method: :delete %></td>
+				  </tr>
+				<% end %>
+			</tbody>
+		</table>
+	</div>
+
+</div>
+
+Now for the score_#id to be converted into the star rating, we need to copy the javacsript from our app/views/reviews/show to our dashboard. Don't forget to place them on the bottom of your view, inside the script tags. 
+./app/views/pages/dashboard.html.erb
+<<EOF
+</div>
+
+<script>
+ <% @reviews.each do |review| %>
+      $(".score_<%= review.id %> ").raty({
+      starOn: "<%= image_path('star-on.png') %>",
+      starOff: "<%= image_path('star-off.png') %>",
+      score: '<%= review.score %>',
+      readOnly: true 
+    });
+  <% end %>
+</script>
+
+git commit -m "Add the dashboard"
 
 ###########
 29
