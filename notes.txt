@@ -1970,9 +1970,89 @@ Let's go to the browser and see the result!
 
 git commit -m "Improved landing page"
 
+
+
 ###########
 30
 SEARCH
+Step 1
+This will be very exciting step, because we will be adding search to our application. The search method will eventually perform a SQL query directly on the database, but first we need to update the current html search form and transform it to a nice rails search form.
+Open the layouts/_header partial, and substitute the <form class=.. with a form_tag do-end block. 
+Set the method to get, and copy give it the classes that the standard bootstrap form had.  
+./app/views/layouts/_header.html.erb
+-
+      <form class="navbar-form navbar-left" role="search">
+      <%= form_tag places_path, method: :get, class: 'navbar-form navbar-left' do %>
++
+
+-
+        <% end %>
+      </form>
++
+
+And we need to replace the input field with a rails text_field_tag, and direct the input to the params. Again we can copy the bootstrap classes from the old HTML input form.
+
+./app/views/layouts/_header.html.erb
+-
+          <input type="text" class="form-control" placeholder="Search">
+          <%= text_field_tag :search, params[:search], class: 'form-control', placeholder: "Type a Name or a Place" %>
++
+
+Last, the button. Substitute the button with the rails submit_tag. Take note, that the search button needs an extra parameter to the name: attribute, to prevent it sending extra arguments. Again, we can re-use the provided bootstrap classes from the input button. 
+./app/views/layouts/_header.html.erb
+-
+        <button type="submit" class="btn btn-default">Submit</button>
+        <%= submit_tag "Search", name: nil, class: 'btn btn-default' %>
++
+
+Step 2
+Renew the browser, and try out the search form. There won't be any search results displayed yet, but you'll notice the search params in the URL.
+
+We need to catch the search params in the controller, and show the listings that correspond. 
+This means that we need to update the index action on the PlacesController, and tell it to show the Places that match the search params.  
+
+./app/controllers/places_controller.rb
+<<BOF
+class PlacesController < ApplicationController
+  before_action :authenticate_user!, only: [:new, :edit, :create, :update, :destroy ]
+  before_action :set_place, only: [:show, :edit, :update, :destroy]
+
+  # GET /places
+  # GET /places.json
+  def index
+  +
+    @places = Place.search(params[:search])
+  end
+
+This means we also need to create the search method on the places, we want to be able to search the 'name' field and the 'address' field, so the SQL query will look like this. 
+./app/models/place.rb
+<<EOF
+
+	rescue ZeroDivisionError
+		0
+	end
+
+	def self.search(search)
+		if search 
+			where(['name LIKE ? or address LIKE ?', "#{search}", "#{search}" ])
+		else
+			all
+		end
+
+	end
+
+end
+
+Step 3
+And after we restart the server, and try out the search function with the exact name or address, you'll notice that our search functionality now works! 
+
+Great work! The exact search match works. If you want to implement more advanced search functions you could check out something like elastic search, but for this recipe we'll stick to this. 
+
+Step 4
+Time so save, and commit our work to github. 
+
+git commit -m "Add basic search"
+
 
 ###########
 31
