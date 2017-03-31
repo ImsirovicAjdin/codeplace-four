@@ -2168,4 +2168,42 @@ git commit -m "Finishing touches"
 32
 DEPLOY
 
+Step 1
+Time to deploy our application to Heroku! 
+You probably know the drill by now, first start with organizing the gemfile.  
+Add the sqlite gem to the development group, and create a new group for production. 
+Heroku runs Postgres as a database, and needs the assets gem 'rails_12factor' to. 
 
+./gemfile.rb
+- LN12 gem 'sqlite3'
++ LN47 gem 'sqlite3'
+
++ btween group :development and the custom gems you added:
+
+  gem 'spring'
+end
+...
++
+group :production do 
+	gem 'pg'
+	gem 'rails_12factor'
+end
+
+...
+gem 'twitter-bootstrap-rails'
+
+
+bundle update
+
+Step 2
+Next we need to precompile the assets. 
+RAILS_ENV=production bundle exec rake assets:precompile 
+
+The first time I run the command I got an error message, stating that the secret_key for devise needs to be set. 
+
+To fix this, you need to uncomment the secret_key line in the devise initializer
+./config/initializers/devise.rb
+
+And run the bundle precompile again. 
+
+Now we need to the final git commit, and push it to Github. 
